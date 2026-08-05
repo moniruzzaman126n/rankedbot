@@ -6,11 +6,12 @@ const {
   EmbedBuilder,
   PermissionsBitField,
 } = require('discord.js');
+const deployCommands = require('./deploy-commands.js');
 
 // ---- Config -----------------------------------------------------------
 const MAX_PLAYERS = 4;        // team size that triggers an auto-start
 const MIN_FORCE_START = 2;    // minimum players required for /rankstart
-const QUEUE_TIMEOUT_MS = 30 * 60 * 1000; // 10 minutes timeout per player (FIXED)
+const QUEUE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes timeout per player
 
 // ---- In-memory state ----------------------------------------------------
 const guildStates = new Map();
@@ -39,8 +40,15 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   console.log(`Logged in as ${c.user.tag}. Ready to manage ranked queues.`);
+
+  // Automatically register global slash commands on bot startup
+  try {
+    await deployCommands();
+  } catch (err) {
+    console.error('Failed to execute deployCommands on startup:', err);
+  }
 });
 
 // ---- Helper: start a game from a list of players ---------------------
