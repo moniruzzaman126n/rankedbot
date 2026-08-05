@@ -88,7 +88,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   switch (interaction.commandName) {
     case 'rankadd':    
-    case 'ranka':
+    case 'rankq':
     case 'rankqueue': {
       if (state.activeGame) {
         await interaction.reply({
