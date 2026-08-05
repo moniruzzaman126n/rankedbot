@@ -62,7 +62,7 @@ async function startGame(interaction, state, players, leaderId) {
   state.queueCaptainId = null;
 
   const embed = new EmbedBuilder()
-    .setTitle('🎮 Ranked game starting!')
+    .setTitle(' Ranked game starting!')
     .setDescription(playerList(players))
     .addFields({ name: 'Team Leader', value: `<@${leaderId}>` })
     .setFooter({ text: 'The team leader (or an admin) can run /rankend when the game is over.' })
@@ -111,8 +111,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (state.queue.length < MAX_PLAYERS) {
         await interaction.reply({
           content: [
-            `✅ <@${user.id}> joined the ranked queue (${state.queue.length}/${MAX_PLAYERS}).`,
-            `👑 Captain: <@${state.queueCaptainId}>`,
+            ` <@${user.id}> joined the ranked queue (${state.queue.length}/${MAX_PLAYERS}).`,
+            ` Captain: <@${state.queueCaptainId}>`,
             playerList(state.queue),
           ].join('\n'),
         });
@@ -122,7 +122,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       // Queue is full: auto-start, captain becomes team leader.
       const players = state.queue.splice(0, MAX_PLAYERS);
       const leaderId = state.queueCaptainId;
-      await interaction.reply({ content: `✅ <@${user.id}> joined. Queue is full — starting the game!` });
+      await interaction.reply({ content: ` <@${user.id}> joined. Queue is full — starting the game!` });
       await startGame(interaction, state, players, leaderId);
       return;
     }
@@ -141,14 +141,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (wasCaptain) {
         if (state.queue.length > 0) {
           state.queueCaptainId = state.queue[0].id;
-          captainNote = `\n👑 <@${state.queueCaptainId}> is now the captain.`;
+          captainNote = `\n <@${state.queueCaptainId}> is now the captain.`;
         } else {
           state.queueCaptainId = null;
         }
       }
 
       await interaction.reply({
-        content: `👋 <@${user.id}> left the queue (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
+        content: ` <@${user.id}> left the queue (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
       });
       return;
     }
@@ -178,7 +178,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       state.queue = [];
       state.queueCaptainId = null;
 
-      await interaction.reply({ content: `🛑 <@${user.id}> aborted the queue. Use \`/rankqueue\` to start a new one.` });
+      await interaction.reply({ content: ` <@${user.id}> aborted the queue. Use \`/rankqueue\` to start a new one.` });
       return;
     }
 
@@ -214,7 +214,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ? state.queueCaptainId
         : user.id;
 
-      await interaction.reply({ content: `⚡ <@${user.id}> force-started the game with ${players.length} player(s).` });
+      await interaction.reply({ content: ` <@${user.id}> force-started the game with ${players.length} player(s).` });
       await startGame(interaction, state, players, leaderId);
       return;
     }
@@ -235,7 +235,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('🏁 Ranked game ended')
+        .setTitle(' Ranked game ended')
         .setDescription(`Ended by <@${user.id}>. Thanks for playing!\nQueue is open again — use \`/rankqueue\` to join the next game.`)
         .setColor(0xed4245)
         .setTimestamp();
@@ -247,7 +247,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     case 'rankstatus': {
-      const embed = new EmbedBuilder().setTitle('📋 Ranked Queue Status').setColor(0x5865f2);
+      const embed = new EmbedBuilder().setTitle(' Ranked Queue Status').setColor(0x5865f2);
 
       if (state.activeGame) {
         embed.addFields(
