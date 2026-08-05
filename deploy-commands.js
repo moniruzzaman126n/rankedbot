@@ -54,24 +54,23 @@ module.exports = async function deployCommands() {
       throw new Error('CLIENT_ID is missing from environment variables.');
     }
 
-    console.log('--- Cleaning up and deploying slash commands ---');
+    console.log('--- PURGING ALL OLD COMMANDS ---');
 
-    // 1. Clear any leftover Guild (Server-specific) commands that cause duplicates
-    if (process.env.GUILD_ID) {
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-        { body: [] }
-      );
-      console.log('Successfully wiped old guild-specific commands.');
-    }
+    // 1. Force wipe all existing global commands
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: [] }
+    );
+    console.log('Successfully wiped old global commands from Discord.');
 
-    // 2. Overwrite global commands with the clean list of 9 commands
+    // 2. Register the fresh 9 commands globally
+    console.log(`Registering ${commands.length} fresh global commands...`);
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
+    console.log('Fresh global commands successfully registered!');
 
-    console.log(`Successfully registered ${commands.length} global commands across Discord.`);
   } catch (error) {
     console.error('Failed to deploy commands:', error);
   }
