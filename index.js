@@ -10,7 +10,7 @@ const {
 // ---- Config -----------------------------------------------------------
 const MAX_PLAYERS = 4;        // team size that triggers an auto-start
 const MIN_FORCE_START = 2;    // minimum players required for /rankstart
-const QUEUE_TIMEOUT_MS = 20 * 60 * 1000; // 10 minutes timeout per player (FIXED)
+const QUEUE_TIMEOUT_MS = 30 * 60 * 1000; // 10 minutes timeout per player (FIXED)
 
 // ---- In-memory state ----------------------------------------------------
 const guildStates = new Map();
@@ -119,7 +119,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
           // Send notification to the channel that the user timed out
           await interaction.channel.send({
-            content: `⏰ <@${user.id}> was removed from the queue due to inactivity (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
+            content: ` <@${user.id}> was removed from the queue due to inactivity (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
           });
         }
       }, QUEUE_TIMEOUT_MS);
