@@ -5,15 +5,15 @@ const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 const commands = [
   new SlashCommandBuilder()
     .setName('rankqueue')
-    .setDescription('Join the ranked matchmaking queue (4 players needed).'),
+    .setDescription('Join the ranked matchmaking queue.'),
 
   new SlashCommandBuilder()
     .setName('rankq')
-    .setDescription('Alias for /rankqueue — join the queue.'),
+    .setDescription('Join the ranked matchmaking queue..'),
 
   new SlashCommandBuilder()
     .setName('rankadd')
-    .setDescription('Alias for /rankqueue — join the queue.'),
+    .setDescription('Join the ranked matchmaking queue..'),
 
   new SlashCommandBuilder()
     .setName('rankleave')
@@ -25,7 +25,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('rankstart')
-    .setDescription('Force-start a game with whoever is currently in queue. Captain/admin only.'),
+    .setDescription('Force-start a game with less than 4 members. Captain/admin only.'),
 
   new SlashCommandBuilder()
     .setName('rankend')
@@ -33,7 +33,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('rankfinish')
-    .setDescription('Alias for /rankend — end the current ranked game.'),
+    .setDescription('End the current ranked game. Team leader/admin only.'),
 
   new SlashCommandBuilder()
     .setName('rankstatus')
