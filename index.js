@@ -69,6 +69,9 @@ async function startGame(interaction, state, players, leaderId) {
   state.queue = [];
   state.queueCaptainId = null;
 
+  // Build mentions string only for the players in this game
+  const playerMentions = players.map((p) => `<@${p.id}>`).join(' ');
+
   const embed = new EmbedBuilder()
     .setTitle('Ranked game starting!')
     .setDescription(playerList(players))
@@ -77,8 +80,14 @@ async function startGame(interaction, state, players, leaderId) {
     .setColor(0x57f287)
     .setTimestamp();
 
-  await interaction.channel.send({ content: '@here A ranked game has started!', embeds: [embed] });
+  // Ping only the queued players instead of @here
+  await interaction.channel.send({ 
+    content: `The ranked game has started! ${playerMentions}`, 
+    embeds: [embed] 
+  });
 }
+
+
 
 // ---- Interaction handling ----------------------------------------------
 client.on(Events.InteractionCreate, async (interaction) => {
