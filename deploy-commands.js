@@ -3,7 +3,7 @@ const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 const commands = [
   new SlashCommandBuilder()
-    .setName('rank++')
+    .setName('rankadd')
     .setDescription('Join the ranked matchmaking queue.'),
 
   new SlashCommandBuilder()
@@ -13,10 +13,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('rankqueue')
     .setDescription('Join the ranked matchmaking queue.'),
-
-  new SlashCommandBuilder()
-    .setName('rank--')
-    .setDescription('eave the ranked matchmaking queue.'),
 
   new SlashCommandBuilder()
     .setName('rankleave')
