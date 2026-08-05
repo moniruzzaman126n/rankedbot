@@ -246,6 +246,58 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
+    case 'rankremove': {
+      if (state.activeGame) {
+        await interaction.reply({
+          content: 'A game is already in progress — use `/rankend` to finish it instead.',
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (state.queue.length === 0) {
+        await interaction.reply({ content: 'The queue is currently empty.', ephemeral: true });
+        return;
+      }
+
+      if (!isCaptainOrAdmin(interaction, state.queueCaptainId)) {
+        await interaction.reply({
+          content: `Only the queue captain (<@${state.queueCaptainId}>) or a server admin can remove players.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const targetUser = interaction.options.getUser('target');
+      const idx = state.queue.findIndex((p) => p.id === targetUser.id);
+
+      if (idx === -1) {
+        await interaction.reply({
+          content: `<@${targetUser.id}> is not in the queue.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const wasCaptain = state.queueCaptainId === targetUser.id;
+      state.queue.splice(idx, 1);
+
+      let captainNote = '';
+      if (wasCaptain) {
+        if (state.queue.length > 0) {
+          state.queueCaptainId = state.queue[0].id;
+          captainNote = `\n <@${state.queueCaptainId}> is now the captain.`;
+        } else {
+          state.queueCaptainId = null;
+        }
+      }
+
+      await interaction.reply({
+        content: ` <@${user.id}> removed <@${targetUser.id}> from the queue (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
+      });
+      return;
+    }
+
     case 'rankstatus': {
       const embed = new EmbedBuilder().setTitle(' Ranked Queue Status').setColor(0x5865f2);
 
