@@ -56,14 +56,25 @@ module.exports = async function deployCommands() {
 
     console.log('--- PURGING ALL OLD COMMANDS ---');
 
-    // 1. Force wipe all existing global commands
+    // 1. Wipe Guild-specific commands if GUILD_ID exists in .env
+    if (process.env.GUILD_ID) {
+      console.log('Purging Guild-specific commands...');
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+        { body: [] }
+      );
+      console.log('Wiped Guild commands.');
+    }
+
+    // 2. Wipe Global commands
+    console.log('Purging Global commands...');
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: [] }
     );
-    console.log('Successfully wiped old global commands from Discord.');
+    console.log('Wiped Global commands.');
 
-    // 2. Register the fresh 9 commands globally
+    // 3. Register fresh commands globally
     console.log(`Registering ${commands.length} fresh global commands...`);
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
