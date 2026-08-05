@@ -79,6 +79,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const user = interaction.user;
 
   switch (interaction.commandName) {
+    case 'rank++':    
+    case 'rankQ':
     case 'rankqueue': {
       if (state.activeGame) {
         await interaction.reply({
@@ -149,6 +151,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
+    case 'rank--':
     case 'rankleave': {
       const idx = state.queue.findIndex((p) => p.id === user.id);
       if (idx === -1) {
