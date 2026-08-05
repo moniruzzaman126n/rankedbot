@@ -1,3 +1,4 @@
+// index.js
 require('dotenv').config();
 const {
   Client,
@@ -15,6 +16,7 @@ const QUEUE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes timeout per player
 
 // ---- In-memory state ----------------------------------------------------
 const guildStates = new Map();
+let isDeployed = false; // Prevent re-deployment on reconnects
 
 function getState(guildId) {
   if (!guildStates.has(guildId)) {
@@ -43,11 +45,14 @@ const client = new Client({
 client.once(Events.ClientReady, async (c) => {
   console.log(`Logged in as ${c.user.tag}. Ready to manage ranked queues.`);
 
-  // Automatically register global slash commands on bot startup
-  try {
-    await deployCommands();
-  } catch (err) {
-    console.error('Failed to execute deployCommands on startup:', err);
+  // Automatically deploy and purge stale commands across all connected guilds
+  if (!isDeployed) {
+    try {
+      await deployCommands(client);
+      isDeployed = true;
+    } catch (err) {
+      console.error('Failed to execute deployCommands on startup:', err);
+    }
   }
 });
 
@@ -65,7 +70,7 @@ async function startGame(interaction, state, players, leaderId) {
   state.queueCaptainId = null;
 
   const embed = new EmbedBuilder()
-    .setTitle(' Ranked game starting!')
+    .setTitle('Ranked game starting!')
     .setDescription(playerList(players))
     .addFields({ name: 'Team Leader', value: `<@${leaderId}>` })
     .setFooter({ text: 'The team leader (or an admin) can run /rankend when the game is over.' })
@@ -267,7 +272,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle(' Ranked game ended')
+        .setTitle('Ranked game ended')
         .setDescription(`Ended by <@${user.id}>. Thanks for playing!\nQueue is open again — use \`/rankqueue\` to join the next game.`)
         .setColor(0xed4245)
         .setTimestamp();
@@ -332,7 +337,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     case 'rankstatus': {
-      const embed = new EmbedBuilder().setTitle(' Ranked Queue Status').setColor(0x5865f2);
+      const embed = new EmbedBuilder().setTitle('Ranked Queue Status').setColor(0x5865f2);
 
       if (state.activeGame) {
         embed.addFields(
