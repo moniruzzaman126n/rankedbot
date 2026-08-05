@@ -35,7 +35,7 @@ const commands = [
     .setDescription('Alias for /rankend — end the current ranked game. Team leader or server admin only.'),
 
   new SlashCommandBuilder()
-    .setName('ranremove')
+    .setName('rankremove')
     .setDescription('Removes one person from rank queue.'),
 
   new SlashCommandBuilder()
