@@ -12,6 +12,10 @@ const commands = [
     .setDescription('Alias for /rankqueue — join the queue.'),
 
   new SlashCommandBuilder()
+    .setName('rankadd')
+    .setDescription('Alias for /rankqueue — join the queue.'),
+
+  new SlashCommandBuilder()
     .setName('rankleave')
     .setDescription('Leave the ranked matchmaking queue.'),
 
@@ -48,7 +52,10 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-module.exports = async function deployCommands() {
+/**
+ * @param {import('discord.js').Client} [client]
+ */
+module.exports = async function deployCommands(client = null) {
   try {
     if (!process.env.CLIENT_ID) {
       throw new Error('CLIENT_ID is missing from environment variables.');
@@ -56,14 +63,22 @@ module.exports = async function deployCommands() {
 
     console.log('--- PURGING ALL OLD COMMANDS ---');
 
-    // 1. Wipe Guild-specific commands if GUILD_ID exists in .env
-    if (process.env.GUILD_ID) {
-      console.log('Purging Guild-specific commands...');
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-        { body: [] }
-      );
-      console.log('Wiped Guild commands.');
+    // 1. If client is passed, iterate through ALL joined guilds and wipe local commands
+    if (client && client.guilds) {
+      const guilds = await client.guilds.fetch();
+      console.log(`Found ${guilds.size} connected guild(s). Clearing guild-level commands...`);
+
+      for (const [guildId] of guilds) {
+        try {
+          await rest.put(
+            Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+            { body: [] }
+          );
+          console.log(`Wiped guild commands for Guild ID: ${guildId}`);
+        } catch (err) {
+          console.error(`Failed to wipe guild commands for ${guildId}:`, err);
+        }
+      }
     }
 
     // 2. Wipe Global commands
@@ -74,13 +89,13 @@ module.exports = async function deployCommands() {
     );
     console.log('Wiped Global commands.');
 
-    // 3. Register fresh commands globally
+    // 3. Register fresh global commands across all servers
     console.log(`Registering ${commands.length} fresh global commands...`);
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
-    console.log('Fresh global commands successfully registered!');
+    console.log('Fresh global commands successfully registered across all servers!');
 
   } catch (error) {
     console.error('Failed to deploy commands:', error);
