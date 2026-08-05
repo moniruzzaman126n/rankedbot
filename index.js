@@ -87,7 +87,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     case 'rankqueue': {
       if (state.activeGame) {
         await interaction.reply({
-          content: 'A ranked game is already in progress. Wait for the team leader (or an admin) to run `/rankend` first.',
+          content: 'A ranked game is already in progress.',
           ephemeral: true,
         });
         return;
@@ -102,7 +102,32 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const isFirstToJoin = state.queue.length === 0;
-      state.queue.push({ id: user.id, tag: user.tag });
+
+      // Set timeout timer for this specific user
+      const timeoutTimer = setTimeout(async () => {
+        const currentIdx = state.queue.findIndex((p) => p.id === user.id);
+        if (currentIdx !== -1) {
+          const wasCaptain = state.queueCaptainId === user.id;
+          state.queue.splice(currentIdx, 1);
+
+          let captainNote = '';
+          if (wasCaptain) {
+            if (state.queue.length > 0) {
+              state.queueCaptainId = state.queue[0].id;
+              captainNote = ` <@${state.queueCaptainId}> is now the captain.`;
+            } else {
+              state.queueCaptainId = null;
+            }
+          }
+
+          // Send notification to the channel that the user timed out
+          await interaction.channel.send({
+            content: `⏰ <@${user.id}> was removed from the queue due to inactivity (${state.queue.length}/${MAX_PLAYERS}).${captainNote}`,
+          });
+        }
+      }, QUEUE_TIMEOUT_MS);
+
+      state.queue.push({ id: user.id, tag: user.tag, timer: timeoutTimer });
 
       if (isFirstToJoin) {
         state.queueCaptainId = user.id;
@@ -119,7 +144,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
 
-      // Queue is full: auto-start, captain becomes team leader.
+      // Queue is full: clear all pending timers before starting the game
+      state.queue.forEach((p) => clearTimeout(p.timer));
+
       const players = state.queue.splice(0, MAX_PLAYERS);
       const leaderId = state.queueCaptainId;
       await interaction.reply({ content: ` <@${user.id}> joined. Queue is full — starting the game!` });
