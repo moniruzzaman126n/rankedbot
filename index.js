@@ -8,16 +8,11 @@ const {
 } = require('discord.js');
 
 // ---- Config -----------------------------------------------------------
-const MAX_PLAYERS = 4;       // team size that triggers an auto-start
-const MIN_FORCE_START = 2;   // minimum players required for /rankstart
+const MAX_PLAYERS = 4;        // team size that triggers an auto-start
+const MIN_FORCE_START = 2;    // minimum players required for /rankstart
+const QUEUE_TIMEOUT_MS = 20 * 60 * 1000; // 10 minutes timeout per player (FIXED)
 
 // ---- In-memory state ----------------------------------------------------
-// One state object per guild (Discord server), keyed by guild ID.
-// queue          -> array of { id, tag }  (players waiting)
-// queueCaptainId -> id of the player who started the current queue (the
-//                   first person to /rankqueue after it was empty). This
-//                   person becomes the team leader when the game starts.
-// activeGame     -> null, or { players: [{id, tag}], leaderId, startedAt }
 const guildStates = new Map();
 
 function getState(guildId) {
@@ -35,8 +30,6 @@ function isAdmin(interaction) {
   return interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageGuild) ?? false;
 }
 
-// Only the person who started the queue (its captain) or a server admin
-// may abort/force-start/finish it.
 function isCaptainOrAdmin(interaction, captainId) {
   return interaction.user.id === captainId || isAdmin(interaction);
 }
@@ -51,8 +44,10 @@ client.once(Events.ClientReady, (c) => {
 });
 
 // ---- Helper: start a game from a list of players ---------------------
-// `leaderId` is always the queue captain — the person who started the queue.
 async function startGame(interaction, state, players, leaderId) {
+  // Clear any existing timers on these starting players
+  players.forEach((p) => p.timer && clearTimeout(p.timer));
+
   state.activeGame = {
     players,
     leaderId,
@@ -162,7 +157,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const wasCaptain = state.queueCaptainId === user.id;
-      state.queue.splice(idx, 1);
+      const [removed] = state.queue.splice(idx, 1);
+      if (removed.timer) clearTimeout(removed.timer); // Clear timeout
 
       let captainNote = '';
       if (wasCaptain) {
@@ -202,6 +198,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
 
+      state.queue.forEach((p) => p.timer && clearTimeout(p.timer)); // Clear timeouts
       state.queue = [];
       state.queueCaptainId = null;
 
@@ -235,8 +232,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const players = state.queue.splice(0, MAX_PLAYERS);
-      // Keep the existing captain as leader; if for some reason they're no
-      // longer in the players list, fall back to whoever force-started it.
       const leaderId = players.some((p) => p.id === state.queueCaptainId)
         ? state.queueCaptainId
         : user.id;
@@ -307,7 +302,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const wasCaptain = state.queueCaptainId === targetUser.id;
-      state.queue.splice(idx, 1);
+      const [removed] = state.queue.splice(idx, 1);
+      if (removed.timer) clearTimeout(removed.timer); // Clear timeout
 
       let captainNote = '';
       if (wasCaptain) {
@@ -355,10 +351,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.login(process.env.DISCORD_TOKEN);
 
-// ---- Optional keep-alive web server -------------------------------------
-// Some free hosts (e.g. Render's free Web Service) require the app to bind
-// to an HTTP port or it will be considered "dead" and shut down.
-// This is harmless to leave in on hosts that don't need it.
 if (process.env.PORT) {
   const express = require('express');
   const app = express();
