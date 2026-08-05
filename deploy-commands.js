@@ -7,7 +7,7 @@ const commands = [
     .setDescription('Join the ranked matchmaking queue.'),
 
   new SlashCommandBuilder()
-    .setName('rankQ')
+    .setName('rankq')
     .setDescription('Join the ranked matchmaking queue.'),
 
   new SlashCommandBuilder()
