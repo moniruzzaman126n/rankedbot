@@ -1,5 +1,5 @@
-// Registers the slash commands with Discord.
-// Run this once whenever you add/change a command: `npm run deploy-commands`
+// Registers the slash commands globally with Discord.
+// Run this whenever you add/change a command: `npm run deploy-commands`
 
 require('dotenv').config();
 const { REST, Routes, SlashCommandBuilder } = require('discord.js');
@@ -42,21 +42,16 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
       throw new Error('CLIENT_ID is missing from your .env file.');
     }
 
-    if (process.env.GUILD_ID) {
-      // Guild commands update instantly - best for development/testing.
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-        { body: commands }
-      );
-      console.log(`Registered ${commands.length} commands to guild ${process.env.GUILD_ID}.`);
-    } else {
-      // Global commands can take up to ~1 hour to propagate.
-      await rest.put(
-        Routes.applicationCommands(process.env.CLIENT_ID),
-        { body: commands }
-      );
-      console.log(`Registered ${commands.length} global commands. This can take up to an hour to appear.`);
-    }
+    console.log(`Started refreshing ${commands.length} application (/) commands...`);
+
+    // Global registration - works across ALL servers the bot has joined.
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+
+    console.log(`Successfully registered ${commands.length} global commands across Discord.`);
+    console.log('Note: Global commands can take up to ~1 hour to appear in all servers.');
   } catch (error) {
     console.error('Failed to register commands:', error);
     process.exit(1);
